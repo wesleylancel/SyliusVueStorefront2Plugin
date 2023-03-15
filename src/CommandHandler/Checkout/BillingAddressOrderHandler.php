@@ -14,7 +14,7 @@ use BitBag\SyliusVueStorefront2Plugin\Command\Checkout\BillingAddressOrder;
 use BitBag\SyliusVueStorefront2Plugin\Resolver\OrderAddressStateResolverInterface;
 use Doctrine\Persistence\ObjectManager;
 use Sylius\Bundle\ApiBundle\Context\UserContextInterface;
-use Sylius\Bundle\ApiBundle\Provider\CustomerProviderInterface;
+use Sylius\Bundle\CoreBundle\Resolver\CustomerResolverInterface;
 use Sylius\Component\Core\Model\AddressInterface;
 use Sylius\Component\Core\Model\CustomerInterface;
 use Sylius\Component\Core\Model\OrderInterface;
@@ -34,7 +34,7 @@ final class BillingAddressOrderHandler implements MessageHandlerInterface
 
     private ObjectManager $manager;
 
-    private CustomerProviderInterface $customerProvider;
+    private CustomerResolverInterface $customerResolver;
 
     private OrderAddressStateResolverInterface $addressStateResolver;
 
@@ -45,14 +45,14 @@ final class BillingAddressOrderHandler implements MessageHandlerInterface
     public function __construct(
         OrderRepositoryInterface $orderRepository,
         ObjectManager $manager,
-        CustomerProviderInterface $customerProvider,
+        CustomerResolverInterface $customerResolver,
         OrderAddressStateResolverInterface $addressStateResolver,
         UserContextInterface $userContext,
         EventDispatcherInterface $eventDispatcher,
     ) {
         $this->orderRepository = $orderRepository;
         $this->manager = $manager;
-        $this->customerProvider = $customerProvider;
+        $this->customerResolver = $customerResolver;
         $this->addressStateResolver = $addressStateResolver;
         $this->userContext = $userContext;
         $this->eventDispatcher = $eventDispatcher;
@@ -89,7 +89,7 @@ final class BillingAddressOrderHandler implements MessageHandlerInterface
         $loggedInCustomer = null !== $loggedIn ? $loggedIn->getCustomer() : null;
 
         if (null !== $addressOrder->email) {
-            $customer = $this->customerProvider->provide($addressOrder->email);
+            $customer = $this->customerResolver->resolve($addressOrder->email);
         } elseif (null !== $loggedInCustomer) {
             $customer = $loggedInCustomer;
         } else {

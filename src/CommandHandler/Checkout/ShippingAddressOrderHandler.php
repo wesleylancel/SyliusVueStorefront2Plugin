@@ -13,7 +13,7 @@ namespace BitBag\SyliusVueStorefront2Plugin\CommandHandler\Checkout;
 use BitBag\SyliusVueStorefront2Plugin\Command\Checkout\ShippingAddressOrder;
 use BitBag\SyliusVueStorefront2Plugin\Resolver\OrderAddressStateResolverInterface;
 use Doctrine\Persistence\ObjectManager;
-use Sylius\Bundle\ApiBundle\Provider\CustomerProviderInterface;
+use Sylius\Bundle\CoreBundle\Resolver\CustomerResolverInterface;
 use Sylius\Component\Core\Model\AddressInterface;
 use Sylius\Component\Core\Model\OrderInterface;
 use Sylius\Component\Core\Repository\OrderRepositoryInterface;
@@ -31,7 +31,7 @@ final class ShippingAddressOrderHandler implements MessageHandlerInterface
 
     private ObjectManager $manager;
 
-    private CustomerProviderInterface $customerProvider;
+    private CustomerResolverInterface $customerResolver;
 
     private OrderAddressStateResolverInterface $addressStateResolver;
 
@@ -40,13 +40,13 @@ final class ShippingAddressOrderHandler implements MessageHandlerInterface
     public function __construct(
         OrderRepositoryInterface $orderRepository,
         ObjectManager $manager,
-        CustomerProviderInterface $customerProvider,
+        CustomerResolverInterface $customerResolver,
         OrderAddressStateResolverInterface $addressStateResolver,
         EventDispatcherInterface $eventDispatcher,
     ) {
         $this->orderRepository = $orderRepository;
         $this->manager = $manager;
-        $this->customerProvider = $customerProvider;
+        $this->customerResolver = $customerResolver;
         $this->addressStateResolver = $addressStateResolver;
         $this->eventDispatcher = $eventDispatcher;
     }
@@ -74,7 +74,7 @@ final class ShippingAddressOrderHandler implements MessageHandlerInterface
     private function applyCustomer(OrderInterface $order, ShippingAddressOrder $command): void
     {
         if (null === $order->getCustomer() && null !== $command->email) {
-            $order->setCustomer($this->customerProvider->provide($command->email));
+            $order->setCustomer($this->customerResolver->resolve($command->email));
         }
     }
 

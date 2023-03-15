@@ -22,6 +22,7 @@ use Sylius\Component\Core\Repository\OrderRepositoryInterface;
 use Sylius\Component\User\Repository\UserRepositoryInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\EventDispatcher\GenericEvent;
+use Symfony\Component\PasswordHasher\Hasher\PasswordHasherFactoryInterface;
 use Symfony\Component\Security\Core\Encoder\EncoderFactoryInterface;
 use Webmozart\Assert\Assert;
 
@@ -30,7 +31,7 @@ final class LoginResolver implements MutationResolverInterface
 {
     public const EVENT_NAME = 'bitbag.sylius_vue_storefront2.mutation_resolver.login.complete';
 
-    private EncoderFactoryInterface $encoderFactory;
+    private PasswordHasherFactoryInterface $passwordHasherFactory;
 
     private EntityManagerInterface $entityManager;
 
@@ -49,7 +50,7 @@ final class LoginResolver implements MutationResolverInterface
         EntityManagerInterface $entityManager,
         UserRepositoryInterface $userRepository,
         OrderRepositoryInterface $orderRepository,
-        EncoderFactoryInterface $encoderFactory,
+        PasswordHasherFactoryInterface $passwordHasherFactory,
         ShopUserTokenFactoryInterface $tokenFactory,
         EventDispatcherInterface $eventDispatcher,
         ChannelContextInterface $channelContext,
@@ -58,7 +59,7 @@ final class LoginResolver implements MutationResolverInterface
         $this->userRepository = $userRepository;
         $this->orderRepository = $orderRepository;
         $this->encoderFactory = $encoderFactory;
-        $this->tokenFactory = $tokenFactory;
+        $this->passwordHasherFactory = $passwordHasherFactory;
         $this->eventDispatcher = $eventDispatcher;
         $this->channelContext = $channelContext;
     }
@@ -85,7 +86,7 @@ final class LoginResolver implements MutationResolverInterface
 
         Assert::notNull($user, 'Wrong credentials.');
 
-        $encoder = $this->encoderFactory->getEncoder($user);
+        $encoder = $this->passwordHasherFactory->getPasswordHasher($user);
 
         $userPassword = $user->getPassword();
         $userSalt = $user->getSalt();
